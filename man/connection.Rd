@@ -17,8 +17,10 @@ connection(ip, port)
   \code{Zconnection} - S4 class connection handle.
 }
 \examples{
+\dontrun{
 c1 <- connection("127.0.0.1", 20001)    # establish the connection
 c1 ? tail(z)                            # ask the remote to evaluate tail(z)
+}
 }
 \keyword{ztsdb}
 \keyword{connection}

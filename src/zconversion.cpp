@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Leonardo Silvestri
+// Copyright (C) 2015-2017 Leonardo Silvestri
 //
 // This file is part of ztsdb.
 //
@@ -63,51 +63,108 @@ static Rcpp::List convertDimnames(const std::vector<std::unique_ptr<arr::Dname>>
 
 template <int RTYPE, typename T>
 static Rcpp::Vector<RTYPE> convertArray(const arr::Array<T>& a) {
-  // if we have a vector we can do 'memcpy' LLL
-  Rcpp::Vector<RTYPE> v;
-  for (arr::idx_type i=0; i<a.size(); ++i) {
-    v.push_back(a[i]);
+  // Note: a first version of these functions used
+  // 'Rcpp::Vector::push_back', but that proved to be incredibly slow,
+  // so instead we allocate the vector upfront and then subassign.
+
+  Rcpp::Vector<RTYPE> v(a.size()); // unfortunately we have initialization here...
+                                   // we would be faster using directly the SEXP
+                                   // allocate/populate SEXP, then construct v with it
+  uint64_t offset = 0;
+  for (const auto& av : a.v) {
+    for (arr::idx_type j=0; j<a.nrows(); ++j) {
+      v[offset + j] = (*av)[j];
+    }
+    offset += a.nrows();
   }
-  v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
-  v.attr("dimnames") = convertDimnames(a.names);
+  if (a.getdim().size() > 1) {
+    v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
+  }
+  if (a.hasNames()) {
+    if (a.getdim().size() == 1) {
+      v.attr("names") = convertDimnames(a.names)[0];
+    }
+    else {
+      v.attr("dimnames") = convertDimnames(a.names);
+    }
+  }
   return v;
 }
 
 
 static Rcpp::NumericVector convertDtimeArray(const arr::Array<Global::dtime>& a) {
-  Rcpp::NumericVector v;
-  for (arr::idx_type i=0; i<a.size(); ++i) {
-    auto dt = a[i];
-    double d = dt.time_since_epoch().count() / 1e9;
-    auto r = dt.time_since_epoch().count() % 1000; // verify that we are not rounding
-    Rcpp::Function warning("warning");
-    if (r) {
-      warning("time precision loss");
+  Rcpp::NumericVector v(a.size());
+  uint64_t offset = 0;
+  for (const auto& av : a.v) {
+    for (arr::idx_type j=0; j<a.nrows(); ++j) {
+      auto dt = (*av)[j];
+      double d = dt.time_since_epoch().count() / 1e9;
+      auto r = dt.time_since_epoch().count() % 1000; // verify that we are not rounding
+      Rcpp::Function warning("warning");
+      if (r) {
+        warning("time precision loss");
+      }
+      v[offset + j] = d;
     }
-    v.push_back(d);
+    offset += a.nrows();
   }
   v.attr("class") = Rcpp::CharacterVector{"POSIXct", "POSIXt"};
-  v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
-  v.attr("dimnames") = convertDimnames(a.names);
+  if (a.getdim().size() > 1) {
+    v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
+  }
+  if (a.hasNames()) {
+    if (a.getdim().size() == 1) {
+      v.attr("names") = convertDimnames(a.names)[0];
+    }
+    else {
+      v.attr("dimnames") = convertDimnames(a.names);
+    }
+  }
   return v;
 }
 
 
 static Rcpp::NumericVector convertDtimeVector(const Vector<Global::dtime>& a) {
-  Rcpp::NumericVector v;
-  for (arr::idx_type i=0; i<a.size(); ++i) {
-    auto dt = a[i];
+  Rcpp::NumericVector v(a.size());
+  for (arr::idx_type j=0; j<a.size(); ++j) {
+    auto dt = a[j];
     double d = dt.time_since_epoch().count() / 1e9;
     auto r = dt.time_since_epoch().count() % 1000; // verify that we are not rounding
     Rcpp::Function warning("warning");
     if (r) {
       warning("time precision loss");
     }
-    v.push_back(d);
+    v[j] = d;
   }
   v.attr("class") = Rcpp::CharacterVector{"POSIXct", "POSIXt"};
   return v;
 }
+
+
+static Rcpp::Vector<STRSXP> convertStringArray(const arr::Array<arr::zstring>& a) {
+  Rcpp::Vector<STRSXP> v(a.size()); // unfortunately we have initialization here...
+                                    // we would be faster using directly the SEXP
+  uint64_t offset = 0;
+  for (const auto& av : a.v) {
+    for (arr::idx_type j=0; j<a.nrows(); ++j) {
+      v[offset + j] = std::string((*av)[j]);
+    }
+    offset += a.nrows();
+  }
+  if (a.getdim().size() > 1) {
+    v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
+  }
+  if (a.hasNames()) {
+    if (a.getdim().size() == 1) {
+      v.attr("names") = convertDimnames(a.names)[0];
+    }
+    else {
+      v.attr("dimnames") = convertDimnames(a.names);
+    }
+  }
+  return v;
+}
+
 
 union int64_double {
   int64_t i;
@@ -123,8 +180,17 @@ static Rcpp::NumericVector convertDurationArray(const arr::Array<Global::duratio
     v.push_back(id.d);
   }
   v.attr("class") = Rcpp::CharacterVector{"integer64"};
-  v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
-  v.attr("dimnames") = convertDimnames(a.names);
+  if (a.getdim().size() > 1) {
+    v.attr("dim") = Rcpp::IntegerVector(a.getdim().begin(), a.getdim().end());
+  }
+  if (a.hasNames()) {
+    if (a.getdim().size() == 1) {
+      v.attr("names") = convertDimnames(a.names)[0];
+    }
+    else {
+      v.attr("dimnames") = convertDimnames(a.names);
+    }
+  }
   return v;
 }
 
@@ -154,37 +220,37 @@ static Rcpp::NumericVector convertZts(const arr::zts& z) {
 SEXP valueToSEXP(const val::Value& v) {
   switch (v.which()) {
   case val::vt_zts: {
-    val::SpZts ts = get<val::SpZts>(v);
+    const auto& ts = get<val::SpZts>(v);
     Rcpp::NumericVector v = convertZts(*ts);
     return Rcpp::wrap(v);
   }
   case val::vt_double: {
-    val::SpVAD a = get<val::SpVAD>(v);
+    const auto& a = get<val::SpVAD>(v);
     Rcpp::NumericVector v = convertArray<REALSXP, double>(*a);
     return Rcpp::wrap(v);
   }
   case val::vt_bool: {
-    val::SpVAB a = get<val::SpVAB>(v);
+    const auto& a = get<val::SpVAB>(v);
     Rcpp::LogicalVector v = convertArray<LGLSXP, bool>(*a);
     return Rcpp::wrap(v);
   }
   case val::vt_time: {
-    val::SpVADT a = get<val::SpVADT>(v);
+    const auto& a = get<val::SpVADT>(v);
     Rcpp::NumericVector v = convertDtimeArray(*a);
     return Rcpp::wrap(v);
   }
   case val::vt_duration: {
-    val::SpVADUR a = get<val::SpVADUR>(v);
+    const auto& a = get<val::SpVADUR>(v);
     Rcpp::NumericVector v = convertDurationArray(*a);
     return Rcpp::wrap(v);
   }
   case val::vt_string: {
-    val::SpVAS a = get<val::SpVAS>(v);
-    Rcpp::CharacterVector v = convertArray<STRSXP, arr::zstring>(*a);
+    const auto& a = get<val::SpVAS>(v);
+    Rcpp::CharacterVector v = convertStringArray(*a);
     return Rcpp::wrap(v);
   }
   case val::vt_error: {
-    auto e = get<val::VError>(v);
+    const auto& e = get<val::VError>(v);
     throw std::range_error(e.what);
   }
   default:

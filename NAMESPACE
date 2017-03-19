@@ -1,4 +1,4 @@
-useDynLib(ztsdb)
+useDynLib(rztsdb)
 import(methods, Rcpp)
 export("?")
 export("connection")

@@ -1,14 +1,15 @@
-Package: ztsdb
+Package: rztsdb
 Type: Package
-Title: Interface to ztsdb
-Version: 0.1
-Date: 2017-02-01
+Title: Interface to ztsdb DBMS
+Version: 0.2
+Date: 2017-03-19
 Author: Leonardo Silvestri
 Maintainer: Leonardo Silvestri <lsilvestri@ztsdb.org>
-Description: This package allows to seamlessly interface to the 'ztsdb' DBMS.
+Description: This package allows to seamlessly interface to the ztsdb DBMS.
 License: GPL (>= 2)
 Depends: bit64
 Imports: methods, Rcpp (>= 0.11.5), xts
+Suggests: RUnit
 LinkingTo: Rcpp
 BugReports: https://gitlab.com/lsilvest/rztsdb/issues
 RoxygenNote: 6.0.0

@@ -25,8 +25,10 @@ ztsdb connectivity
 \keyword{ package }
 \keyword{ timeseries }
 \examples{
+\dontrun{
 ## create a connection:
 c1 <- connection("127.0.0.1", port=18000)
 ## get the tail of remote object 'a'
 c1 ? tail(a)
+}
 }
