@@ -44,7 +44,6 @@ test_time <- function() {
 test_string <- function() {
   checkEquals(matrix(as.character(1:10), 5, 2), c1 ? matrix(as.character(1:10), 5, 2))
 }
-
 # zts may have tzone difference, so here again don't use checkEquals
 test_zts <- function() {
   x <- xts(1:9, as.POSIXct("1970-01-01", tz="UTC")+1:9)
@@ -52,3 +51,12 @@ test_zts <- function() {
   checkTrue(all(index(x) == index(z)))
   checkTrue(all(coredata(x) == coredata(z)))
 }
+
+## list
+test_list_double <- function() {
+  checkEquals(list(1,2,3), c1 ? list(1,2,3))
+}
+test_list_nested <- function() {
+  checkEquals(list(1, list(1,"2",TRUE), 3), c1 ? list(1, list(1,"2",TRUE), 3))
+}
+  

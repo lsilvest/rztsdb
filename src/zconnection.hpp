@@ -29,16 +29,17 @@
 
 class Zconnection {
 public:
-  Zconnection(std::string _addr, int _port);
+  Zconnection(std::string ip_p, int port_p);
 
   SEXP query(std::string s, SEXP e, SEXP env);
-
+  SEXP ip();
+  SEXP port();
 
   ~Zconnection();
 
 private:
-  std::string addr;    // only needed for printout, maybe we can get it from comm LLL
-  int port;            // only needed for printout, maybe we can get it from comm LLL
+  std::string _ip;    // only needed for printout, maybe we can get it from comm LLL
+  int _port;          // only needed for printout, maybe we can get it from comm LLL
 
   Global::conn_id_t peer_conn_id; ///> the identifier for the connection 
 

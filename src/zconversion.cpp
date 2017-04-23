@@ -217,6 +217,15 @@ static Rcpp::NumericVector convertZts(const arr::zts& z) {
 }
 
 
+static Rcpp::List convertList(const arr::Array<val::Value>& a) {
+  Rcpp::List l(a.size());
+  for (size_t j=0; j<a.size(); ++j) {
+    l[j] = valueToSEXP(a[j]);
+  }
+  return l;
+}
+
+
 SEXP valueToSEXP(const val::Value& v) {
   switch (v.which()) {
   case val::vt_zts: {
@@ -248,6 +257,11 @@ SEXP valueToSEXP(const val::Value& v) {
     const auto& a = get<val::SpVAS>(v);
     Rcpp::CharacterVector v = convertStringArray(*a);
     return Rcpp::wrap(v);
+  }
+  case val::vt_list: {
+    const auto& a = get<val::SpVList>(v);
+    Rcpp::List l = convertList(a->a);
+    return Rcpp::wrap(l);
   }
   case val::vt_error: {
     const auto& e = get<val::VError>(v);

@@ -1,8 +1,8 @@
 Package: rztsdb
 Type: Package
 Title: Interface to ztsdb DBMS
-Version: 0.2
-Date: 2017-03-19
+Version: 0.2.1
+Date: 2017-04-23
 Author: Leonardo Silvestri
 Maintainer: Leonardo Silvestri <lsilvestri@ztsdb.org>
 Description: This package allows to seamlessly interface to the ztsdb DBMS.

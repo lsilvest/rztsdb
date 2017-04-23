@@ -8,7 +8,7 @@ Make sure ztsdb is installed first (see
 [ztsdb installation](http://ztsdb.org/docs/install.html)); then the
 rztsdb package can be installed in a straightforward way:
 
-~~~
+~~~ R
 library(devtools)
 devtools::install_git("https://lsilvest@gitlab.com/lsilvest/rztsdb.git")
 ~~~

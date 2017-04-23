@@ -54,7 +54,7 @@ static void* executeNetHandler(void* args_p) {
 }
 
 
-Zconnection::Zconnection(std::string _addr, int _port)  : addr(_addr), port(_port) {
+Zconnection::Zconnection(std::string ip_p, int port_p)  : _ip(ip_p), _port(port_p) {
   if (!com) {
     int data_com_ir = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
     if (data_com_ir == -1) {
@@ -79,7 +79,7 @@ Zconnection::Zconnection(std::string _addr, int _port)  : addr(_addr), port(_por
 
   while (!com->ready); // wait until com is ready for connection requests
 
-  peer_conn_id = net->connect(_addr, port);
+  peer_conn_id = net->connect(_ip, _port);
   // check if no error, LLL
 }
 
@@ -238,7 +238,7 @@ extern "C" SEXP R_inspect(SEXP x);
 #endif
 
 
-/// Finds an escape sequence. And escape sequence is started by a
+/// Finds an escape sequence. An escape sequence is started by a
 /// '++'. So for example if we have 'con ? 1 - ++a', the variable 'a'
 /// will be evaluated in R before the expression is being sent for
 /// remote evaluation. If we have 'con ? 1 - ++(sin(2.2) + 4)', the
@@ -248,7 +248,7 @@ static void findEscape(SEXP e, std::vector<SEXP>& ve) {
   // 'R_inspect' prints out the detailed AST. But in order to be able
   // to call it we need to recompile R without the 'attribute_hidden'
   // specifier in front of the definition of 'R_inspect'. This
-  // specifier prevents visibility in the shared library and it
+  // specifier prevents visibility in the shared library and it is
   // defined like this:
   //
   // # define attribute_hidden __attribute__ ((visibility ("hidden")))
@@ -299,7 +299,7 @@ SEXP Zconnection::query(std::string s, SEXP e, SEXP env) {
   std::cout << to_string(*pctx.prog.get()) << std::endl;
 #endif
 
-  // find the escapes expressions in the R AST, and put them in a
+  // find the escape expressions in the R AST, and put them in a
   // vector so we can evaluate them:
   std::vector<SEXP> bndExpr;
   findEscape(e, bndExpr);
@@ -335,6 +335,14 @@ SEXP Zconnection::query(std::string s, SEXP e, SEXP env) {
 }
 
 
+SEXP Zconnection::ip() {
+  return Rcpp::wrap(_ip);
+}
+
+SEXP Zconnection::port() {
+  return Rcpp::wrap(static_cast<double>(_port));
+}
+
 std::unique_ptr<net::NetHandler> Zconnection::com = nullptr;
 std::unique_ptr<client::Client> Zconnection::net = nullptr;
 volatile bool Zconnection::stop = 0;
@@ -347,6 +355,8 @@ RCPP_MODULE(ZconnectionEx) {
 
   .constructor<std::string, int>()
   .method("query", &Zconnection::query) 
+  .method("ip",    &Zconnection::ip) 
+  .method("port",  &Zconnection::port) 
   ;
 }
 
