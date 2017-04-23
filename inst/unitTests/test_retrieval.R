@@ -59,4 +59,13 @@ test_list_double <- function() {
 test_list_nested <- function() {
   checkEquals(list(1, list(1,"2",TRUE), 3), c1 ? list(1, list(1,"2",TRUE), 3))
 }
+test_list_double_named <- function() {
+  checkEquals(list(a=1,b=2,c=3), c1 ? list(a=1,b=2,c=3))
+}
+test_list_double_partially_named <- function() {
+  checkEquals(list(a=1,2,c=3), c1 ? list(a=1,2,c=3))
+}
+test_list_nested_partially_named <- function() {
+  checkEquals(list(1, list(a=1,"2",TRUE), c=3), c1 ? list(1, list(a=1,"2",TRUE), c=3))
+}
   

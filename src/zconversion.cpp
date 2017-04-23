@@ -222,6 +222,13 @@ static Rcpp::List convertList(const arr::Array<val::Value>& a) {
   for (size_t j=0; j<a.size(); ++j) {
     l[j] = valueToSEXP(a[j]);
   }
+  if (a.hasNames()) {
+    auto names = Rcpp::CharacterVector(a.size());
+    for (size_t j=0; j<a.size(); ++j) {
+      names[j] = a.getNames(0)[j];
+    }
+    l.names() = names;
+  }
   return l;
 }
 
