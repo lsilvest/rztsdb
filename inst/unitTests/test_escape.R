@@ -3,6 +3,13 @@
 test_double_scalar <- function() {
   checkEquals(1, c1 ? ++1)
 }
+test_double_scalar_multiple_plus <- function() {
+  checkEquals(6, c1 ? (1 + 2 + 3))
+}
+test_double_scalar_multiple_plus <- function() {
+  a <- 1; b <- 2; c <- 3
+  checkEquals(6, c1 ? (++a + ++b + ++c))
+}
 test_double <- function() {
   m <- matrix(1:9, 3, 3, dimnames=list(c("1","2","3"), c("a","b","c")))
   checkEquals(m, c1 ? ++m)

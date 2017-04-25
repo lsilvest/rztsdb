@@ -218,11 +218,14 @@ static val::Value SEXPToValue(SEXP s) {
 static SEXP checkEscape(SEXP e) {
   if (!Rf_isNull(e) && TYPEOF(e) == LANGSXP) {
     auto symb = CAR(e);
-    if (std::string(CHAR(PRINTNAME(symb))) == "+") {
+    // note: the CDR(CDR()) construct tests that it's a unary +
+    if (std::string(CHAR(PRINTNAME(symb))) == "+" && CDR(CDR(e))==R_NilValue) {
       auto l = CDR(e);
       if (TYPEOF(l) == LISTSXP) {
         auto next = CAR(l);
-        if (TYPEOF(next) == LANGSXP && std::string(CHAR(PRINTNAME(CAR(next)))) == "+") {
+        if (TYPEOF(next) == LANGSXP &&
+            std::string(CHAR(PRINTNAME(CAR(next)))) == "+" &&
+            CDR(CDR(next))==R_NilValue) {
           return CAR(CDR(next));
         }
       }
