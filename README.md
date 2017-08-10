@@ -4,6 +4,9 @@ This R package provides seamless integration with the [ztsdb](http://www.ztsdb.o
 
 # Installation
 
+Note that rztsdb uses Linux-only API and therefore will not compile
+and install on other operating systems.
+
 Make sure ztsdb is installed first (see
 [ztsdb installation](http://ztsdb.org/docs/install.html)); then the
 rztsdb package can be installed in a straightforward way:
