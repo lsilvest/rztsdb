@@ -136,7 +136,7 @@ static Rcpp::NumericVector convertDtimeVector(const Vector<Global::dtime>& a) {
     }
     v[j] = d;
   }
-  v.attr("class") = Rcpp::CharacterVector{"POSIXct", "POSIXt"};
+  v.attr("tclass") = Rcpp::CharacterVector{"POSIXct", "POSIXt"};
   return v;
 }
 
